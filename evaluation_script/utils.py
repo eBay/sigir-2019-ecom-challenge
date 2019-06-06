@@ -63,26 +63,14 @@ class BaseMetrics():
     def add_tp(self, x):
         self.tp = self.tp + x
 
-    def return_tp(self):
-        return self.tp
-
     def add_fp(self, x):
         self.fp = self.fp + x
-
-    def return_fp(self):
-        return self.fp
 
     def add_tn(self, x):
         self.tn = self.tn + x
 
-    def return_tn(self):
-        return self.tn
-
     def add_fn(self, x):
         self.fn = self.fn + x
-
-    def return_fn(self):
-        return self.fn
 
 class Metrics():
     def __init__(self):
