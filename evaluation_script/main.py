@@ -2,7 +2,6 @@ from utils import get_file_extension
 from utils import open_file
 from utils import calculate_precision
 from utils import calculate_recall
-from utils import calculate_tpr
 from utils import calculate_fpr
 from utils import calculate_f1
 from utils import BaseMetrics
