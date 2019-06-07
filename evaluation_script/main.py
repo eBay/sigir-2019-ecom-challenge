@@ -34,10 +34,11 @@ def calculate_query_level_metrics():
         qa_f1 = qa_f1 + query_level_metrics[query_id].f1
 
     total_queries = len(query_level_base_metrics.keys())
-    qa_precision = qa_precision/total_queries
-    qa_recall = qa_recall/total_queries
-    qa_fpr = qa_fpr/total_queries
-    qa_f1 = qa_f1/total_queries
+    if total_queries > 0:
+        qa_precision = qa_precision/total_queries
+        qa_recall = qa_recall/total_queries
+        qa_fpr = qa_fpr/total_queries
+        qa_f1 = qa_f1/total_queries
 
     return (qa_precision, qa_recall, qa_fpr, qa_f1)
 """
