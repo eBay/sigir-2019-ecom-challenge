@@ -74,3 +74,11 @@ completed evaluation for supervised phase
 
 {'precision': 0.6, 'recall': 0.75, 'f1': 0.6666666666666665, 'tpr': 0.75, 'fpr': 0.6666666666666666}
 ```
+
+## Running unit tests
+
+Some basic unit tests are available. These are useful when modifying the main scoring function. These tests are also run when a pull request is issued. To run the tests locally:
+
+```
+$ python3 tests.py
+```
