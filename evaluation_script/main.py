@@ -22,10 +22,11 @@ def calculate_query_level_metrics():
 
     for query_id in query_level_base_metrics:
         base_metrics = query_level_base_metrics[query_id]
-        query_level_metrics[query_id].precision = calculate_precision(base_metrics.tp, base_metrics.fp)
-        query_level_metrics[query_id].recall = calculate_recall(base_metrics.tp, base_metrics.fn)
-        query_level_metrics[query_id].fpr = calculate_fpr(base_metrics.fp, base_metrics.tn)
-        query_level_metrics[query_id].f1 = calculate_f1(query_level_metrics[query_id].precision,query_level_metrics[query_id].recall)
+        if not are_all_base_metrics_zero(base_metrics.tp, base_metrics.tn, base_metrics.fp, base_metrics.fn):
+            query_level_metrics[query_id].precision = calculate_precision(base_metrics.tp, base_metrics.fp)
+            query_level_metrics[query_id].recall = calculate_recall(base_metrics.tp, base_metrics.fn)
+            query_level_metrics[query_id].fpr = calculate_fpr(base_metrics.fp, base_metrics.tn)
+            query_level_metrics[query_id].f1 = calculate_f1(base_metrics.tp, base_metrics.fp, base_metrics.fn)
 
     for query_id in query_level_base_metrics:
         qa_precision = qa_precision + query_level_metrics[query_id].precision
@@ -204,21 +205,13 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
         extension = get_file_extension(user_submission_file)
         if extension == "tsv" or extension == "gz": 
             (tp, tn, fp, fn) = calculate_base_metrics(user_submission_file, truth)
-            precision = calculate_precision(tp, fp)
-            recall = calculate_recall(tp, fn)
-            fpr = calculate_recall(fp, tn)
-            f1 = calculate_f1(precision, recall)
-            (qa_precision, qa_recall, qa_fpr, qa_f1) = calculate_query_level_metrics() 
-        else:
-            precision = 0
-            recall = 0
-            fpr = 0
-            f1 = 0
-            qa_precision = 0
-            qa_recall = 0
-            qa_fpr = 0
-            qa_f1 = 0
-
+            if not are_all_base_metrics_zero(tp, tn, fp, fn):
+                precision = calculate_precision(tp, fp)
+                recall = calculate_recall(tp, fn)
+                fpr = calculate_recall(fp, tn)
+                f1 = calculate_f1(tp, fp, fn)
+                (qa_precision, qa_recall, qa_fpr, qa_f1) = calculate_query_level_metrics()
+ 
         output["result"] = [
             {
                 "data": {

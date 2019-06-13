@@ -12,6 +12,12 @@ def open_file(filename):
     r = gzip.open(filename,'rt') if is_gzipped else open(filename, 'rt')
     return r
 
+def are_all_base_metrics_zero(tp, tn, fp, fn):
+    if tp == 0 and tn == 0 and fp == 0 and fn == 0:
+        return True
+    else:
+        return False
+
 def calculate_precision(tp, fp):
     precision = 0
     if tp == 0 and fp == 0:
