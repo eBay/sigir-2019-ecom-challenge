@@ -1,11 +1,12 @@
-from utils import get_file_extension
-from utils import open_file
-from utils import calculate_precision
-from utils import calculate_recall
-from utils import calculate_fpr
-from utils import calculate_f1
-from utils import BaseMetrics
-from utils import Metrics
+from .utils import get_file_extension
+from .utils import open_file
+from .utils import are_all_base_metrics_zero
+from .utils import calculate_precision
+from .utils import calculate_recall
+from .utils import calculate_fpr
+from .utils import calculate_f1
+from .utils import BaseMetrics
+from .utils import Metrics
 
 query_level_base_metrics = {}
 query_level_metrics = {}
@@ -36,10 +37,10 @@ def calculate_query_level_metrics():
 
     total_queries = len(query_level_base_metrics.keys())
     if total_queries > 0:
-        qa_precision = qa_precision/total_queries
-        qa_recall = qa_recall/total_queries
-        qa_fpr = qa_fpr/total_queries
-        qa_f1 = qa_f1/total_queries
+        qa_precision = float(qa_precision) / total_queries
+        qa_recall = float(qa_recall) / total_queries
+        qa_fpr = float(qa_fpr) / total_queries
+        qa_f1 = float(qa_f1) / total_queries
 
     return (qa_precision, qa_recall, qa_fpr, qa_f1)
 """
