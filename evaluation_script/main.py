@@ -181,6 +181,9 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
         }
     """
     print("Starting Evaluation.....")
+    query_level_base_metrics.clear()
+    query_level_metrics.clear()
+    documents_with_ground_truth.clear()
     truth = populate_ground_truth(test_annotation_file)
     output = {}
     tp = 0
