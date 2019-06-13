@@ -47,11 +47,16 @@ def calculate_fpr(fp, tn):
         fpr = float(fp) / (fp + tn)
     return fpr
 
-def calculate_f1(precision, recall):
+def calculate_f1(tp, fp, fn):
     f1 = 0
-    if precision > 0 or recall > 0:
-        f1 = 2 * (precision * recall) / (precision + recall)
-    return f1
+    if tp == 0 and fp == 0 and fn == 0:
+        return f1
+    else:
+        p = calculate_precision(tp,fp)
+        r = calculate_recall(tp,fn) 
+        if p > 0 or r > 0:
+            f1 = 2 * (p * r) / (p + r)
+        return f1
 
 class BaseMetrics():
     def __init__(self):
