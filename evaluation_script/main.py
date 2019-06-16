@@ -21,22 +21,22 @@ def calculate_query_level_metrics():
     qa_fpr = 0
     qa_f1 = 0
 
-    for query_id in query_level_base_metrics:
-        base_metrics = query_level_base_metrics[query_id]
-        if not are_all_base_metrics_zero(base_metrics.tp, base_metrics.tn, base_metrics.fp, base_metrics.fn):
-            query_level_metrics[query_id].precision = calculate_precision(base_metrics.tp, base_metrics.fp)
-            query_level_metrics[query_id].recall = calculate_recall(base_metrics.tp, base_metrics.fn)
-            query_level_metrics[query_id].fpr = calculate_fpr(base_metrics.fp, base_metrics.tn)
-            query_level_metrics[query_id].f1 = calculate_f1(base_metrics.tp, base_metrics.fp, base_metrics.fn)
-
-    for query_id in query_level_base_metrics:
-        qa_precision = qa_precision + query_level_metrics[query_id].precision
-        qa_recall = qa_recall + query_level_metrics[query_id].recall
-        qa_fpr = qa_fpr + query_level_metrics[query_id].fpr
-        qa_f1 = qa_f1 + query_level_metrics[query_id].f1
-
     total_queries = len(query_level_base_metrics.keys())
     if total_queries > 0:
+        for query_id in query_level_base_metrics:
+            base_metrics = query_level_base_metrics[query_id]
+            if not are_all_base_metrics_zero(base_metrics.tp, base_metrics.tn, base_metrics.fp, base_metrics.fn):
+                query_level_metrics[query_id].precision = calculate_precision(base_metrics.tp, base_metrics.fp)
+                query_level_metrics[query_id].recall = calculate_recall(base_metrics.tp, base_metrics.fn)
+                query_level_metrics[query_id].fpr = calculate_fpr(base_metrics.fp, base_metrics.tn)
+                query_level_metrics[query_id].f1 = calculate_f1(base_metrics.tp, base_metrics.fp, base_metrics.fn)
+
+        for query_id in query_level_base_metrics:
+            qa_precision = qa_precision + query_level_metrics[query_id].precision
+            qa_recall = qa_recall + query_level_metrics[query_id].recall
+            qa_fpr = qa_fpr + query_level_metrics[query_id].fpr
+            qa_f1 = qa_f1 + query_level_metrics[query_id].f1
+
         qa_precision = float(qa_precision) / total_queries
         qa_recall = float(qa_recall) / total_queries
         qa_fpr = float(qa_fpr) / total_queries
