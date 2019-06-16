@@ -19,39 +19,31 @@ def are_all_base_metrics_zero(tp, tn, fp, fn):
         return False
 
 def calculate_precision(tp, fp):
-    precision = 0
     if tp == 0 and fp == 0:
         """Precision = 1 when FP=0, since no there were no spurious results"""
-        precision = 1
+        return 1
     else:
-        precision = float(tp) / (tp + fp)
-    return precision
+        return float(tp) / (tp + fp)
 
 def calculate_recall(tp, fn):
-    recall = 0
     if tp == 0 and fn == 0:
         """Recall = 1 when FN=0, since 100% of the TP were discovered""" 
-        recall = 1
+        return 1
     else:
-        recall = float(tp) / (tp + fn)
-    return recall
+        return float(tp) / (tp + fn)
 
 def calculate_tpr(tp, fn):
-    tpr = 0
     if tp == 0 and fn == 0:
         """TPR = 1 when FN=0, since 100% of the TP were discovered""" 
-        tpr = 1
+        return 1
     else:
-        tpr = float(tp) / (tp + fn)
-    return tpr
+        return float(tp) / (tp + fn)
 
 def calculate_fpr(fp, tn):
-    fpr = 0
     if fp == 0 and tn == 0:
-        fpr = 1
+        return 1
     else:
-        fpr = float(fp) / (fp + tn)
-    return fpr
+        return float(fp) / (fp + tn)
 
 def calculate_f1(tp, fp, fn):
     f1 = 0
