@@ -221,11 +221,11 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
                     "global_f1": f1,
                     "global_tpr": recall,
                     "global_fpr": fpr,
-                    "averaged_precision": qa_precision,
-                    "averaged_recall": qa_recall,
-                    "averaged_f1": qa_f1,
-                    "averaged_tpr": qa_recall,
-                    "averaged_fpr": qa_fpr
+                    "average_precision": qa_precision,
+                    "average_recall": qa_recall,
+                    "average_f1": qa_f1,
+                    "average_tpr": qa_recall,
+                    "average_fpr": qa_fpr
                 }
             }
         ]
