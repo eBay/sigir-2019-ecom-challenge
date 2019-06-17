@@ -12,38 +12,33 @@ def open_file(filename):
     r = gzip.open(filename,'rt') if is_gzipped else open(filename, 'rt')
     return r
 
-def are_all_base_metrics_zero(tp, tn, fp, fn):
-    if tp == 0 and tn == 0 and fp == 0 and fn == 0:
-        return True
-    else:
-        return False
-
 def calculate_precision(tp, fp):
-    if tp == 0 and fp == 0:
-        """Precision = 1 when FP=0, since no there were no spurious results"""
-        return 1
-    else:
-        return float(tp) / (tp + fp)
+    """
+        Return the precision given the number of true positives (tp) and false positives (fp).
+        Precision is 1 when fp is zero as there are no spurious results, even if tp is zero.
+    """
+    return float(tp) / (tp + fp) if fp != 0 else 1
 
 def calculate_recall(tp, fn):
-    if tp == 0 and fn == 0:
-        """Recall = 1 when FN=0, since 100% of the TP were discovered""" 
-        return 1
-    else:
-        return float(tp) / (tp + fn)
+    """
+        Return the recall given the number of true positives (tp) and false negatives (fn).
+        Recall is 1 when fn is zero as there are no spurious results, even if tp is zero.
+    """
+    return float(tp) / (tp + fn) if fn != 0 else 1
 
 def calculate_tpr(tp, fn):
-    if tp == 0 and fn == 0:
-        """TPR = 1 when FN=0, since 100% of the TP were discovered""" 
-        return 1
-    else:
-        return float(tp) / (tp + fn)
+    """
+        Return the true positive rate given the number of true positives (tp) and false negatives (fp).
+        True positive rate is 1 when fn is zero as there are no spurious results, even if tp is zero.
+    """
+    return float(tp) / (tp + fn) if fn != 0 else 1
 
 def calculate_fpr(fp, tn):
-    if fp == 0 and tn == 0:
-        return 1
-    else:
-        return float(fp) / (fp + tn)
+    """
+        Return the false positive rate given the number of false positives (fp) and true negatives (tn).
+        False positive rate is 1 when tn is zero as there are no spurious results, even if fp is zero.
+    """
+    return float(fp) / (fp + tn) if tn != 0 else 1
 
 def calculate_f1(tp, fp, fn):
     f1 = 0
