@@ -1,5 +1,48 @@
-import os
-import gzip
+from .utils import get_file_extension
+from .utils import open_file
+from .utils import calculate_precision
+from .utils import calculate_recall
+from .utils import calculate_fpr
+from .utils import calculate_f1
+from .utils import BaseMetrics
+from .utils import Metrics
+
+query_level_base_metrics = {}
+query_level_metrics = {}
+documents_with_ground_truth = set()
+
+"""
+    This function calculates query level metrics from query level base metrics.
+    Since, we checked the length of the query_level_base_metrics.keys() in the 
+    begining we will never get all base metrics as zero. Also, because of this 
+    check we dont need to worry about total_queries being zero in the division.
+"""
+def calculate_query_level_metrics():
+    qa_precision = 0
+    qa_recall = 0
+    qa_fpr = 0
+    qa_f1 = 0
+    total_queries = len(query_level_base_metrics.keys())
+
+    for query_id in query_level_base_metrics:
+        base_metrics = query_level_base_metrics[query_id]
+        query_level_metrics[query_id].precision = calculate_precision(base_metrics.tp, base_metrics.fp)
+        query_level_metrics[query_id].recall = calculate_recall(base_metrics.tp, base_metrics.fn)
+        query_level_metrics[query_id].fpr = calculate_fpr(base_metrics.fp, base_metrics.tn)
+        query_level_metrics[query_id].f1 = calculate_f1(base_metrics.tp, base_metrics.fp, base_metrics.fn)
+
+    for query_id in query_level_base_metrics:
+        qa_precision = qa_precision + query_level_metrics[query_id].precision
+        qa_recall = qa_recall + query_level_metrics[query_id].recall
+        qa_fpr = qa_fpr + query_level_metrics[query_id].fpr
+        qa_f1 = qa_f1 + query_level_metrics[query_id].f1
+
+    qa_precision = float(qa_precision) / total_queries
+    qa_recall = float(qa_recall) / total_queries
+    qa_fpr = float(qa_fpr) / total_queries
+    qa_f1 = float(qa_f1) / total_queries
+
+    return (qa_precision, qa_recall, qa_fpr, qa_f1)
 """
     This creates a map of index with header entries.
     Eg - {1:query_id_1, 2:query_id_2, 3:query_id_3}
@@ -15,18 +58,6 @@ def populate_index_map(infile):
                 index_map[i] = arr[i]
             break
     return index_map
-
-def get_file_extension(infile):
-    filename = os.path.split(infile)[1]
-    filename_arr = filename.split(".")
-    return filename_arr[len(filename_arr)-1]
-
-def open_file(filename):
-    f = open(filename,'rb')
-    is_gzipped = f.read(2) == b'\x1f\x8b'
-    f.close()
-    r = gzip.open(filename,'rt') if is_gzipped else open(filename, 'rt')
-    return r
 
 """
    This skips the first line (header).
@@ -53,32 +84,43 @@ def calculate_base_metrics(infile, truth):
             arr = line.split("\t")
             length = len(arr)
             doc_id = arr[0]
-            for i in range(1, length):
-                query_id = index[i]
-                if (query_id, doc_id) in truth:
-                    if (query_id, doc_id) not in predicted_keys:
-                        predicted_keys.add((query_id, doc_id))
-                        if truth[(query_id, doc_id)] == arr[i]:
-                            if arr[i] == '1':
-                                tp = tp + 1
+            if doc_id in documents_with_ground_truth:
+                for i in range(1, length):
+                    query_id = index[i]
+                    """
+                       We dont need toi check if the query_id is in the query_level_base_metrics
+                       as (query_id, doc_id) in truth will take care of that.
+                    """
+                    if (query_id, doc_id) in truth:
+                        if (query_id, doc_id) not in predicted_keys:
+                            predicted_keys.add((query_id, doc_id))
+                            if truth[(query_id, doc_id)] == arr[i]:
+                                if arr[i] == '1':
+                                    tp = tp + 1
+                                    query_level_base_metrics[query_id].add_tp(1)
+                                else:
+                                    tn = tn + 1
+                                    query_level_base_metrics[query_id].add_tn(1)
                             else:
-                                tn = tn + 1
-                        else:
-                            if truth[(query_id, doc_id)] == '1':
-                                fn = fn + 1
-                            else:
-                                fp = fp + 1
+                                if truth[(query_id, doc_id)] == '1':
+                                    fn = fn + 1
+                                    query_level_base_metrics[query_id].add_fn(1)
+                                else:
+                                    fp = fp + 1
+                                    query_level_base_metrics[query_id].add_fp(1)
 
     """ An unlikely case where (query_id, doc_id) pairs are present in 
         the groung truth but are absent in the prediction file
     """
-    for key in truth.keys():
-        if key not in predicted_keys:
-            if truth[key] == '1':
-                fn = fn + 1 
+    for (query_id, doc_id) in truth.keys():
+        if (query_id, doc_id) not in predicted_keys:
+            if truth[(query_id, doc_id)] == '1':
+                fn = fn + 1
+                query_level_base_metrics[query_id].add_fn(1)
                 """ assume that prediction is -1 """
             else:
                 fp = fp + 1 
+                query_level_base_metrics[query_id].add_fp(1)
                 """ assume that prediction is 1 """
     return (tp, tn, fp, fn)
  
@@ -99,44 +141,17 @@ def populate_ground_truth(infile):
             doc_id = arr[0]
             for i in range(1, length):
                 if arr[i] != '0':
+                    documents_with_ground_truth.add(doc_id)
                     query_id = index[i]
                     results[(query_id, doc_id)] = arr[i]
+                    """
+                       We should only include queries where there is any judgement for
+                       calculating (base) metrics.Exclude queries with no judgements.
+                    """
+                    if query_id not in query_level_base_metrics:
+                        query_level_base_metrics[query_id] = BaseMetrics()
+                        query_level_metrics[query_id] = Metrics()
     return results
-
-def calculate_precision(tp, fp):
-    precision = 0
-    if tp == 0 and fp == 0:
-        """Precision = 1 when FP=0, since no there were no spurious results"""
-        precision = 1
-    else:
-        precision = float(tp) / (tp + fp)
-    return precision
-
-def calculate_recall(tp, fn):
-    recall = 0
-    if tp == 0 and fn == 0:
-        """Recall = 1 when FN=0, since 100% of the TP were discovered""" 
-        recall = 1
-    else:
-        recall = float(tp) / (tp + fn)
-    return recall
-
-def calculate_tpr(tp, fn):
-    return calculate_recall(tp, fn)
-
-def calculate_fpr(fp, tn):
-    fpr = 0
-    if fp == 0 and tn == 0:
-        fpr = 1
-    else:
-        fpr = float(fp) / (fp + tn)
-    return fpr
-
-def calculate_f1(precision, recall):
-    f1 = 0
-    if precision > 0 or recall > 0:
-        f1 = 2 * (precision * recall) / (precision + recall)
-    return f1
 
 def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwargs):
     """
@@ -159,7 +174,7 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
             'when_made_public': None,
             'participant_team': 5,
             'input_file': 'https://abc.xyz/path/to/submission/file.json',
-            execution_time': u'123',
+            'execution_time': u'123',
             'publication_url': u'ABC',
             'challenge_phase': 1,
             'created_by': u'ABC',
@@ -176,7 +191,9 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
         }
     """
     print("Starting Evaluation.....")
-    truth = populate_ground_truth(test_annotation_file)
+    query_level_base_metrics.clear()
+    query_level_metrics.clear()
+    documents_with_ground_truth.clear()
     output = {}
     tp = 0
     tn = 0
@@ -186,32 +203,45 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     recall = 0
     fpr = 0
     f1 = 0
+    qa_precision = 0
+    qa_recall = 0
+    qa_fpr = 0
+    qa_f1 = 0
+
     if phase_codename == "unsupervised" or phase_codename == "supervised" or phase_codename == "final":
         print("evaluating for " +phase_codename+ " phase")
-        extension = get_file_extension(user_submission_file)
-        if extension == "tsv" or extension == "gz": 
-            (tp, tn, fp, fn) = calculate_base_metrics(user_submission_file, truth)
-            precision = calculate_precision(tp, fp)
-            recall = calculate_recall(tp, fn)
-            fpr = calculate_recall(fp, tn)
-            f1 = calculate_f1(precision, recall)
-        else:
-            precision = 0
-            recall = 0
-            fpr = 0
-            f1 = 0
-        output["result"] = [
-            {
-                "data": {
-                    "precision": precision,
-                    "recall": recall,
-                    "f1": f1,
-                    "tpr": recall,
-                    "fpr": fpr,
-                }
-            }
-        ]
-        output["submission_result"] = output["result"][0]["data"]
+        truth = populate_ground_truth(test_annotation_file)
+        """
+           We populate query_level_base_metrics with queries with any judgements as keys.
+           This will be zero if ground truth file is all empty or no queries are judged.
+           Note that this test prevents all base metrics to be zero after calculate_base_metrics().
+        """
+        if len(query_level_base_metrics.keys()) > 0:
+            extension = get_file_extension(user_submission_file)
+            if extension == "tsv" or extension == "gz": 
+                (tp, tn, fp, fn) = calculate_base_metrics(user_submission_file, truth)
+                precision = calculate_precision(tp, fp)
+                recall = calculate_recall(tp, fn)
+                fpr = calculate_recall(fp, tn)
+                f1 = calculate_f1(tp, fp, fn)
+                (qa_precision, qa_recall, qa_fpr, qa_f1) = calculate_query_level_metrics()
+ 
         print("completed evaluation for " +phase_codename + " phase")
-
+    output["result"] = [
+        {
+            "data": {
+                "global_precision": precision,
+                "global_recall": recall,
+                "global_f1": f1,
+                "global_tpr": recall,
+                "global_fpr": fpr,
+                "average_precision": qa_precision,
+                "average_recall": qa_recall,
+                "average_f1": qa_f1,
+                "average_tpr": qa_recall,
+                "average_fpr": qa_fpr
+            }
+        }
+    ]
+    output["submission_result"] = output["result"][0]["data"]
     return output
