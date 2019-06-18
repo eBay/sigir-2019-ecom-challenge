@@ -40,6 +40,13 @@ def calculate_fpr(fp, tn):
     """
     return float(fp) / (fp + tn) if tn != 0 else 1
 
+def calculate_accuracy(tp, fp, tn, fn):
+    """
+       Returns the 'accuracy', defined number of correct predictions divided by the total predictions.
+    """
+    total_predictions = tp + fp + tn + fn;
+    return float(tp + tn) / total_predictions if total_predictions != 0 else 1
+
 def calculate_f1(tp, fp, fn):
     f1 = 0
     if tp == 0 and fp == 0 and fn == 0:
@@ -75,4 +82,5 @@ class Metrics():
         self.precision = 0
         self.recall = 0
         self.fpr = 0
+        self.accuracy = 0
         self.f1 = 0

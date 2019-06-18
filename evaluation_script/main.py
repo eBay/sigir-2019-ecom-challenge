@@ -3,6 +3,7 @@ from .utils import open_file
 from .utils import calculate_precision
 from .utils import calculate_recall
 from .utils import calculate_fpr
+from .utils import calculate_accuracy
 from .utils import calculate_f1
 from .utils import BaseMetrics
 from .utils import Metrics
@@ -47,6 +48,7 @@ def calculate_query_level_metrics():
     qa_precision = 0
     qa_recall = 0
     qa_fpr = 0
+    qa_accuracy = 0
     qa_f1 = 0
     total_queries = len(query_level_base_metrics.keys())
 
@@ -55,20 +57,23 @@ def calculate_query_level_metrics():
         query_level_metrics[query_id].precision = calculate_precision(base_metrics.tp, base_metrics.fp)
         query_level_metrics[query_id].recall = calculate_recall(base_metrics.tp, base_metrics.fn)
         query_level_metrics[query_id].fpr = calculate_fpr(base_metrics.fp, base_metrics.tn)
+        query_level_metrics[query_id].accuracy = calculate_accuracy(base_metrics.tp, base_metrics.fp, base_metrics.tn, base_metrics.fn)
         query_level_metrics[query_id].f1 = calculate_f1(base_metrics.tp, base_metrics.fp, base_metrics.fn)
 
     for query_id in query_level_base_metrics:
         qa_precision = qa_precision + query_level_metrics[query_id].precision
         qa_recall = qa_recall + query_level_metrics[query_id].recall
         qa_fpr = qa_fpr + query_level_metrics[query_id].fpr
+        qa_accuracy = qa_accuracy + query_level_metrics[query_id].accuracy
         qa_f1 = qa_f1 + query_level_metrics[query_id].f1
 
     qa_precision = float(qa_precision) / total_queries
     qa_recall = float(qa_recall) / total_queries
     qa_fpr = float(qa_fpr) / total_queries
+    qa_accuracy = float(qa_accuracy) / total_queries
     qa_f1 = float(qa_f1) / total_queries
 
-    return (qa_precision, qa_recall, qa_fpr, qa_f1)
+    return (qa_precision, qa_recall, qa_fpr, qa_accuracy, qa_f1)
 
 def populate_index_map(infile):
     """
@@ -272,8 +277,9 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
                 precision = calculate_precision(tp, fp)
                 recall = calculate_recall(tp, fn)
                 fpr = calculate_recall(fp, tn)
+                accuracy = calculate_accuracy(tp, fp, tn, fn)
                 f1 = calculate_f1(tp, fp, fn)
-                (qa_precision, qa_recall, qa_fpr, qa_f1) = calculate_query_level_metrics()
+                (qa_precision, qa_recall, qa_fpr, qa_accuracy, qa_f1) = calculate_query_level_metrics()
  
         print("completed evaluation for " +phase_codename + " phase")
     output["result"] = [
@@ -284,11 +290,13 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
                 "global_f1": f1,
                 "global_tpr": recall,
                 "global_fpr": fpr,
+                "global_accuracy": accuracy,
                 "average_precision": qa_precision,
                 "average_recall": qa_recall,
                 "average_f1": qa_f1,
                 "average_tpr": qa_recall,
-                "average_fpr": qa_fpr
+                "average_fpr": qa_fpr,
+                "average_accuracy": qa_accuracy
             }
         }
     ]
