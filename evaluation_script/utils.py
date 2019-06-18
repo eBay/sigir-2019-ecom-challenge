@@ -6,43 +6,41 @@ def get_file_extension(infile):
     return filename_arr[len(filename_arr)-1]
 
 def open_file(filename):
-    f = open(filename,'rb')
+    f = open(filename, 'rb')
     is_gzipped = f.read(2) == b'\x1f\x8b'
     f.close()
-    r = gzip.open(filename,'rt') if is_gzipped else open(filename, 'rt')
+    r = gzip.open(filename, 'rt') if is_gzipped else open(filename, 'rt')
     return r
 
 def calculate_precision(tp, fp):
-    """
-        Return the precision given the number of true positives (tp) and false positives (fp).
-        Precision is 1 when fp is zero as there are no spurious results, even if tp is zero.
+    """Return the precision given the number of true positives (tp) and false positives (fp).
+    Precision is 1 when fp is zero as there are no spurious results, even if tp is zero.
     """
     return float(tp) / (tp + fp) if fp != 0 else 1
 
 def calculate_recall(tp, fn):
-    """
-        Return the recall given the number of true positives (tp) and false negatives (fn).
-        Recall is 1 when fn is zero as there are no spurious results, even if tp is zero.
+    """Return the recall given the number of true positives (tp) and false negatives (fn).
+    Recall is 1 when fn is zero as there are no spurious results, even if tp is zero.
     """
     return float(tp) / (tp + fn) if fn != 0 else 1
 
 def calculate_tpr(tp, fn):
-    """
-        Return the true positive rate given the number of true positives (tp) and false negatives (fp).
-        True positive rate is 1 when fn is zero as there are no spurious results, even if tp is zero.
+    """Return the true positive rate given the number of true positives (tp) and false
+    negatives (fp). True positive rate is 1 when fn is zero as there are no spurious
+    results, even if tp is zero.
     """
     return float(tp) / (tp + fn) if fn != 0 else 1
 
 def calculate_fpr(fp, tn):
-    """
-        Return the false positive rate given the number of false positives (fp) and true negatives (tn).
-        False positive rate is 1 when tn is zero as there are no spurious results, even if fp is zero.
+    """Return the false positive rate given the number of false positives (fp) and true
+    negatives (tn). False positive rate is 1 when tn is zero as there are no spurious
+    results, even if fp is zero.
     """
     return float(fp) / (fp + tn) if tn != 0 else 1
 
 def calculate_accuracy(tp, fp, tn, fn):
-    """
-       Returns the 'accuracy', defined number of correct predictions divided by the total predictions.
+    """Returns the 'accuracy', defined as the number of correct predictions divided by the
+    total predictions.
     """
     total_predictions = tp + fp + tn + fn;
     return float(tp + tn) / total_predictions if total_predictions != 0 else 1
