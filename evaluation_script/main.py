@@ -48,8 +48,7 @@ def populate_index_map(infile):
 
     Note that ground truth and prediction files commonly have query-id identical to
     to column index. However, this is not required.
-    """
-    
+    """    
     index_map = {}
     with open_file(infile) as f:
         for line in f:
@@ -152,8 +151,8 @@ def populate_ground_truth(infile):
     #counts of true positives,false positives etc. The query id
     #is the key, a Metrics object is the value. Only queries 
     #having at least one judged document are included in the dictionary.
-
     query_level_metrics = {}
+
     with open_file(infile) as f:
         next(f)
         for line in f:
@@ -210,7 +209,6 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
             'submitted_at': u'2017-03-20T19:22:03.880652Z'
         }
     """
-    
     print("Starting Evaluation.....")
     output = {}
     precision = 0
