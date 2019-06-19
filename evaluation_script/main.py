@@ -37,11 +37,11 @@ def calculate_query_level_metrics():
 
     for query_id in query_level_metrics:
         metrics = query_level_metrics[query_id]
-        qa_precision = qa_precision + metrics.calculate_precision()
-        qa_recall = qa_recall + metrics.calculate_recall()
-        qa_fpr = qa_fpr + metrics.calculate_fpr()
-        qa_accuracy = qa_accuracy + metrics.calculate_accuracy()
-        qa_f1 = qa_f1 + metrics.calculate_f1()
+        qa_precision = qa_precision + metrics.precision()
+        qa_recall = qa_recall + metrics.recall()
+        qa_fpr = qa_fpr + metrics.fpr()
+        qa_accuracy = qa_accuracy + metrics.accuracy()
+        qa_f1 = qa_f1 + metrics.f1()
 
     qa_precision = float(qa_precision) / total_queries
     qa_recall = float(qa_recall) / total_queries
@@ -236,11 +236,11 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
             extension = get_file_extension(user_submission_file)
             if extension == "tsv" or extension == "gz": 
                 global_metrics = calculate_base_metrics(user_submission_file, truth)
-                precision = global_metrics.calculate_precision()
-                recall = global_metrics.calculate_recall()
-                fpr = global_metrics.calculate_fpr()
-                accuracy = global_metrics.calculate_accuracy()
-                f1 = global_metrics.calculate_f1()
+                precision = global_metrics.precision()
+                recall = global_metrics.recall()
+                fpr = global_metrics.fpr()
+                accuracy = global_metrics.accuracy()
+                f1 = global_metrics.f1()
                 (qa_precision, qa_recall, qa_fpr, qa_accuracy, qa_f1) = calculate_query_level_metrics()
  
         print("completed evaluation for " +phase_codename + " phase")
