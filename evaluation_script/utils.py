@@ -18,11 +18,6 @@ class Metrics():
         self.fp = 0
         self.tn = 0
         self.fn = 0
-        self.precision = 0
-        self.recall = 0
-        self.fpr = 0
-        self.accuracy = 0
-        self.f1 = 0
 
     def add_tp(self, x):
         self.tp = self.tp + x
@@ -40,47 +35,36 @@ class Metrics():
         """Return the precision given the number of true positives (tp) and false positives (fp).
         Precision is 1 when fp is zero as there are no spurious results, even if tp is zero.
         """
-        self.precision = float(self.tp) / (self.tp + self.fp) if self.fp != 0 else 1
+        return float(self.tp) / (self.tp + self.fp) if self.fp != 0 else 1
     
     def calculate_recall(self):
         """Return the recall given the number of true positives (tp) and false negatives (fn).
         Recall is 1 when fn is zero as there are no spurious results, even if tp is zero.
         """
-        self.recall = float(self.tp) / (self.tp + self.fn) if self.fn != 0 else 1
+        return float(self.tp) / (self.tp + self.fn) if self.fn != 0 else 1
     
     def calculate_fpr(self):
         """Return the false positive rate given the number of false positives (fp) and true
         negatives (tn). False positive rate is 1 when tn is zero as there are no spurious
         results, even if fp is zero.
         """
-        self.fpr = float(self.fp) / (self.fp + self.tn) if self.tn != 0 else 1
+        return float(self.fp) / (self.fp + self.tn) if self.tn != 0 else 1
     
     def calculate_accuracy(self):
         """Returns the 'accuracy', defined as the number of correct predictions divided by the
         total predictions.
         """
         total_predictions = self.tp + self.fp + self.tn + self.fn;
-        self.accuracy = float(self.tp + self.tn) / total_predictions if total_predictions != 0 else 1
+        return float(self.tp + self.tn) / total_predictions if total_predictions != 0 else 1
     
     def calculate_f1(self):
         f1 = 0
         if self.tp == 0 and self.fp == 0 and self.fn == 0:
-            self.f1 = f1
+            return f1
         else:
             p = float(self.tp) / (self.tp + self.fp) if self.fp != 0 else 1
             r = float(self.tp) / (self.tp + self.fn) if self.fn != 0 else 1
             if p > 0 or r > 0:
                 f1 = 2 * (p * r) / (p + r)
-            self.f1 = f1
-
-    def clear(self):
-        self.tp = 0
-        self.fp = 0
-        self.tn = 0
-        self.fn = 0
-        self.precision = 0
-        self.recall = 0
-        self.fpr = 0
-        self.accuracy = 0
-        self.f1 = 0
+            return f1
 

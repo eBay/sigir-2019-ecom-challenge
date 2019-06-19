@@ -4,7 +4,7 @@ from .utils import Metrics
 
 query_level_metrics = {}
 """This dictionary holds the scoring metrics for each query. Counts of true positives,
-false positives, precision, recall, etc. The query id is the key, a Metrics object is 
+false positives etc. The query id is the key, a Metrics object is 
 the value. Only queries having at least one judged document are included in the dictionary.
 """
 
@@ -28,7 +28,6 @@ def calculate_query_level_metrics():
       we will never get all base metrics as zero. Also, because of this check we dont need
       to worry about total_queries being zero in the division.
     """
-    
     qa_precision = 0
     qa_recall = 0
     qa_fpr = 0
@@ -38,19 +37,11 @@ def calculate_query_level_metrics():
 
     for query_id in query_level_metrics:
         metrics = query_level_metrics[query_id]
-        metrics.calculate_precision()
-        metrics.calculate_recall()
-        metrics.calculate_fpr()
-        metrics.calculate_accuracy()
-        metrics.calculate_f1()
-
-    for query_id in query_level_metrics:
-        metrics = query_level_metrics[query_id]
-        qa_precision = qa_precision + metrics.precision
-        qa_recall = qa_recall + metrics.recall
-        qa_fpr = qa_fpr + metrics.fpr
-        qa_accuracy = qa_accuracy + metrics.accuracy
-        qa_f1 = qa_f1 + metrics.f1
+        qa_precision = qa_precision + metrics.calculate_precision()
+        qa_recall = qa_recall + metrics.calculate_recall()
+        qa_fpr = qa_fpr + metrics.calculate_fpr()
+        qa_accuracy = qa_accuracy + metrics.calculate_accuracy()
+        qa_f1 = qa_f1 + metrics.calculate_f1()
 
     qa_precision = float(qa_precision) / total_queries
     qa_recall = float(qa_recall) / total_queries
@@ -112,7 +103,7 @@ def calculate_base_metrics(infile, truth):
                 for i in range(1, length):
                     query_id = index[i]
                     
-                    # We dont need toi check if the query_id is in the query_level_base_metrics
+                    # We dont need to check if the query_id is in the query_level_base_metrics
                     # as (query_id, doc_id) in truth will take care of that.
                     if (query_id, doc_id) in truth:
                         if (query_id, doc_id) not in predicted_keys:
@@ -245,16 +236,11 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
             extension = get_file_extension(user_submission_file)
             if extension == "tsv" or extension == "gz": 
                 global_metrics = calculate_base_metrics(user_submission_file, truth)
-                global_metrics.calculate_precision()
-                global_metrics.calculate_recall()
-                global_metrics.calculate_fpr()
-                global_metrics.calculate_accuracy()
-                global_metrics.calculate_f1()
-                precision = global_metrics.precision
-                recall = global_metrics.recall
-                fpr = global_metrics.fpr
-                accuracy = global_metrics.accuracy
-                f1 = global_metrics.f1
+                precision = global_metrics.calculate_precision()
+                recall = global_metrics.calculate_recall()
+                fpr = global_metrics.calculate_fpr()
+                accuracy = global_metrics.calculate_accuracy()
+                f1 = global_metrics.calculate_f1()
                 (qa_precision, qa_recall, qa_fpr, qa_accuracy, qa_f1) = calculate_query_level_metrics()
  
         print("completed evaluation for " +phase_codename + " phase")
