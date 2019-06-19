@@ -3,10 +3,6 @@ from .utils import open_file
 from .utils import BaseMetrics
 from .utils import Metrics
 
-global_base_metrics = BaseMetrics()
-"""This object of BaseMetrics class holds the global base metrics such as true positives,false positives, etc.
-"""
-
 query_level_base_metrics = {}
 """This dictionary holds the base metrics for each query. Counts of true positives,
 false positives, etc. The query id is the key, a BaseMetrics object is the value.
@@ -103,7 +99,7 @@ def calculate_base_metrics(infile, truth):
 
     Note: This skips the first line (header).
     """
-    
+    global_base_metrics = BaseMetrics()
     predicted_keys = set()
     """ predicted_keys serves dual purpose.
     1. Prevents the case where a (query_id, doc_id) pair is present multiple times.
@@ -154,7 +150,9 @@ def calculate_base_metrics(infile, truth):
                 # Assume that prediction is 1
                 global_base_metrics.add_fp(1)
                 query_level_base_metrics[query_id].add_fp(1)
- 
+
+    return global_base_metrics
+
 def populate_ground_truth(infile):
     """Processes the ground truth file.
 
@@ -169,7 +167,6 @@ def populate_ground_truth(infile):
 
     Note: This skips the first line of a ground truth file (header).
     """
-    
     index = populate_index_map(infile)
     results = {}
     with open_file(infile) as f:
@@ -231,7 +228,6 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     """
     
     print("Starting Evaluation.....")
-    global_base_metrics.clear()
     query_level_base_metrics.clear()
     query_level_metrics.clear()
     documents_with_ground_truth.clear()
@@ -256,7 +252,7 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
         if len(query_level_base_metrics.keys()) > 0:
             extension = get_file_extension(user_submission_file)
             if extension == "tsv" or extension == "gz": 
-                calculate_base_metrics(user_submission_file, truth)
+                global_base_metrics = calculate_base_metrics(user_submission_file, truth)
                 precision = global_base_metrics.calculate_precision()
                 recall = global_base_metrics.calculate_recall()
                 fpr = global_base_metrics.calculate_fpr()
