@@ -1,10 +1,5 @@
 from .utils import get_file_extension
 from .utils import open_file
-from .utils import calculate_precision
-from .utils import calculate_recall
-from .utils import calculate_fpr
-from .utils import calculate_accuracy
-from .utils import calculate_f1
 from .utils import BaseMetrics
 from .utils import Metrics
 
@@ -50,11 +45,11 @@ def calculate_query_level_metrics():
 
     for query_id in query_level_base_metrics:
         base_metrics = query_level_base_metrics[query_id]
-        query_level_metrics[query_id].precision = calculate_precision(base_metrics.tp, base_metrics.fp)
-        query_level_metrics[query_id].recall = calculate_recall(base_metrics.tp, base_metrics.fn)
-        query_level_metrics[query_id].fpr = calculate_fpr(base_metrics.fp, base_metrics.tn)
-        query_level_metrics[query_id].accuracy = calculate_accuracy(base_metrics.tp, base_metrics.fp, base_metrics.tn, base_metrics.fn)
-        query_level_metrics[query_id].f1 = calculate_f1(base_metrics.tp, base_metrics.fp, base_metrics.fn)
+        query_level_metrics[query_id].precision = base_metrics.calculate_precision()
+        query_level_metrics[query_id].recall = base_metrics.calculate_recall()
+        query_level_metrics[query_id].fpr = base_metrics.calculate_fpr()
+        query_level_metrics[query_id].accuracy = base_metrics.calculate_accuracy()
+        query_level_metrics[query_id].f1 = base_metrics.calculate_f1()
 
     for query_id in query_level_base_metrics:
         qa_precision = qa_precision + query_level_metrics[query_id].precision
@@ -104,19 +99,13 @@ def calculate_base_metrics(infile, truth):
 
     Note: This skips the first line (header).
     """
-    
+    global_base_metrics = BaseMetrics()
     predicted_keys = set()
     """ predicted_keys serves dual purpose.
     1. Prevents the case where a (query_id, doc_id) pair is present multiple times.
     2. Helps us penalize those (query_id, doc_id) pairs that are present in ground truth
        but are absent in the prediction file (unlikely though) 
     """
-
-    tp = 0
-    tn = 0
-    fp = 0
-    fn = 0
-
     index = populate_index_map(infile)
     with open_file(infile) as f:
         next(f)
@@ -136,17 +125,17 @@ def calculate_base_metrics(infile, truth):
                             predicted_keys.add((query_id, doc_id))
                             if truth[(query_id, doc_id)] == arr[i]:
                                 if arr[i] == '1':
-                                    tp = tp + 1
+                                    global_base_metrics.add_tp(1)
                                     query_level_base_metrics[query_id].add_tp(1)
                                 else:
-                                    tn = tn + 1
+                                    global_base_metrics.add_tn(1)
                                     query_level_base_metrics[query_id].add_tn(1)
                             else:
                                 if truth[(query_id, doc_id)] == '1':
-                                    fn = fn + 1
+                                    global_base_metrics.add_fn(1)
                                     query_level_base_metrics[query_id].add_fn(1)
                                 else:
-                                    fp = fp + 1
+                                    global_base_metrics.add_fp(1)
                                     query_level_base_metrics[query_id].add_fp(1)
 
     # An unlikely case where (query_id, doc_id) pairs are present in 
@@ -155,14 +144,15 @@ def calculate_base_metrics(infile, truth):
         if (query_id, doc_id) not in predicted_keys:
             if truth[(query_id, doc_id)] == '1':
                 # Assume that prediction is -1
-                fn = fn + 1
+                global_base_metrics.add_fn(1)
                 query_level_base_metrics[query_id].add_fn(1)
             else:
                 # Assume that prediction is 1
-                fp = fp + 1 
+                global_base_metrics.add_fp(1)
                 query_level_base_metrics[query_id].add_fp(1)
-    return (tp, tn, fp, fn)
- 
+
+    return global_base_metrics
+
 def populate_ground_truth(infile):
     """Processes the ground truth file.
 
@@ -177,7 +167,6 @@ def populate_ground_truth(infile):
 
     Note: This skips the first line of a ground truth file (header).
     """
-    
     index = populate_index_map(infile)
     results = {}
     with open_file(infile) as f:
@@ -243,10 +232,6 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     query_level_metrics.clear()
     documents_with_ground_truth.clear()
     output = {}
-    tp = 0
-    tn = 0
-    fp = 0
-    fn = 0
     precision = 0
     recall = 0
     fpr = 0
@@ -267,12 +252,12 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
         if len(query_level_base_metrics.keys()) > 0:
             extension = get_file_extension(user_submission_file)
             if extension == "tsv" or extension == "gz": 
-                (tp, tn, fp, fn) = calculate_base_metrics(user_submission_file, truth)
-                precision = calculate_precision(tp, fp)
-                recall = calculate_recall(tp, fn)
-                fpr = calculate_recall(fp, tn)
-                accuracy = calculate_accuracy(tp, fp, tn, fn)
-                f1 = calculate_f1(tp, fp, fn)
+                global_base_metrics = calculate_base_metrics(user_submission_file, truth)
+                precision = global_base_metrics.calculate_precision()
+                recall = global_base_metrics.calculate_recall()
+                fpr = global_base_metrics.calculate_fpr()
+                accuracy = global_base_metrics.calculate_accuracy()
+                f1 = global_base_metrics.calculate_f1()
                 (qa_precision, qa_recall, qa_fpr, qa_accuracy, qa_f1) = calculate_query_level_metrics()
  
         print("completed evaluation for " +phase_codename + " phase")
