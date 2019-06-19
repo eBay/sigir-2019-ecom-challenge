@@ -1,18 +1,11 @@
 from .utils import get_file_extension
 from .utils import open_file
-from .utils import BaseMetrics
 from .utils import Metrics
 
-query_level_base_metrics = {}
-"""This dictionary holds the base metrics for each query. Counts of true positives,
-false positives, etc. The query id is the key, a BaseMetrics object is the value.
-Only queries having at least one judged document are included in the dictionary.
-"""
-
 query_level_metrics = {}
-"""This dictionary holds the scoring metrics for each query. Precision, recall, etc.
-These are calculated from the metrics stored in the query_level_base_metrics dictionary.
-Only queries having at least one judged document are included in the dictionary.
+"""This dictionary holds the scoring metrics for each query. Counts of true positives,
+false positives, precision, recall, etc. The query id is the key, a Metrics object is 
+the value. Only queries having at least one judged document are included in the dictionary.
 """
 
 documents_with_ground_truth = set()
@@ -41,22 +34,23 @@ def calculate_query_level_metrics():
     qa_fpr = 0
     qa_accuracy = 0
     qa_f1 = 0
-    total_queries = len(query_level_base_metrics.keys())
+    total_queries = len(query_level_metrics.keys())
 
-    for query_id in query_level_base_metrics:
-        base_metrics = query_level_base_metrics[query_id]
-        query_level_metrics[query_id].precision = base_metrics.calculate_precision()
-        query_level_metrics[query_id].recall = base_metrics.calculate_recall()
-        query_level_metrics[query_id].fpr = base_metrics.calculate_fpr()
-        query_level_metrics[query_id].accuracy = base_metrics.calculate_accuracy()
-        query_level_metrics[query_id].f1 = base_metrics.calculate_f1()
+    for query_id in query_level_metrics:
+        metrics = query_level_metrics[query_id]
+        metrics.calculate_precision()
+        metrics.calculate_recall()
+        metrics.calculate_fpr()
+        metrics.calculate_accuracy()
+        metrics.calculate_f1()
 
-    for query_id in query_level_base_metrics:
-        qa_precision = qa_precision + query_level_metrics[query_id].precision
-        qa_recall = qa_recall + query_level_metrics[query_id].recall
-        qa_fpr = qa_fpr + query_level_metrics[query_id].fpr
-        qa_accuracy = qa_accuracy + query_level_metrics[query_id].accuracy
-        qa_f1 = qa_f1 + query_level_metrics[query_id].f1
+    for query_id in query_level_metrics:
+        metrics = query_level_metrics[query_id]
+        qa_precision = qa_precision + metrics.precision
+        qa_recall = qa_recall + metrics.recall
+        qa_fpr = qa_fpr + metrics.fpr
+        qa_accuracy = qa_accuracy + metrics.accuracy
+        qa_f1 = qa_f1 + metrics.f1
 
     qa_precision = float(qa_precision) / total_queries
     qa_recall = float(qa_recall) / total_queries
@@ -99,7 +93,7 @@ def calculate_base_metrics(infile, truth):
 
     Note: This skips the first line (header).
     """
-    global_base_metrics = BaseMetrics()
+    global_metrics = Metrics()
     predicted_keys = set()
     """ predicted_keys serves dual purpose.
     1. Prevents the case where a (query_id, doc_id) pair is present multiple times.
@@ -125,18 +119,18 @@ def calculate_base_metrics(infile, truth):
                             predicted_keys.add((query_id, doc_id))
                             if truth[(query_id, doc_id)] == arr[i]:
                                 if arr[i] == '1':
-                                    global_base_metrics.add_tp(1)
-                                    query_level_base_metrics[query_id].add_tp(1)
+                                    global_metrics.add_tp(1)
+                                    query_level_metrics[query_id].add_tp(1)
                                 else:
-                                    global_base_metrics.add_tn(1)
-                                    query_level_base_metrics[query_id].add_tn(1)
+                                    global_metrics.add_tn(1)
+                                    query_level_metrics[query_id].add_tn(1)
                             else:
                                 if truth[(query_id, doc_id)] == '1':
-                                    global_base_metrics.add_fn(1)
-                                    query_level_base_metrics[query_id].add_fn(1)
+                                    global_metrics.add_fn(1)
+                                    query_level_metrics[query_id].add_fn(1)
                                 else:
-                                    global_base_metrics.add_fp(1)
-                                    query_level_base_metrics[query_id].add_fp(1)
+                                    global_metrics.add_fp(1)
+                                    query_level_metrics[query_id].add_fp(1)
 
     # An unlikely case where (query_id, doc_id) pairs are present in 
     # the groung truth but are absent in the prediction file
@@ -144,14 +138,14 @@ def calculate_base_metrics(infile, truth):
         if (query_id, doc_id) not in predicted_keys:
             if truth[(query_id, doc_id)] == '1':
                 # Assume that prediction is -1
-                global_base_metrics.add_fn(1)
-                query_level_base_metrics[query_id].add_fn(1)
+                global_metrics.add_fn(1)
+                query_base_metrics[query_id].add_fn(1)
             else:
                 # Assume that prediction is 1
-                global_base_metrics.add_fp(1)
-                query_level_base_metrics[query_id].add_fp(1)
+                global_metrics.add_fp(1)
+                query_level_metrics[query_id].add_fp(1)
 
-    return global_base_metrics
+    return global_metrics
 
 def populate_ground_truth(infile):
     """Processes the ground truth file.
@@ -184,8 +178,7 @@ def populate_ground_truth(infile):
 
                     # We should only include queries where there is any judgement for
                     # calculating (base) metrics. Exclude queries with no judgements.
-                    if query_id not in query_level_base_metrics:
-                        query_level_base_metrics[query_id] = BaseMetrics()
+                    if query_id not in query_level_metrics:
                         query_level_metrics[query_id] = Metrics()
     return results
 
@@ -228,7 +221,6 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     """
     
     print("Starting Evaluation.....")
-    query_level_base_metrics.clear()
     query_level_metrics.clear()
     documents_with_ground_truth.clear()
     output = {}
@@ -249,15 +241,20 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
         # This will be zero if ground truth file is all empty or no queries are judged.
         # Note that this test prevents all base metrics to be zero after calculate_base_metrics().
         
-        if len(query_level_base_metrics.keys()) > 0:
+        if len(query_level_metrics.keys()) > 0:
             extension = get_file_extension(user_submission_file)
             if extension == "tsv" or extension == "gz": 
-                global_base_metrics = calculate_base_metrics(user_submission_file, truth)
-                precision = global_base_metrics.calculate_precision()
-                recall = global_base_metrics.calculate_recall()
-                fpr = global_base_metrics.calculate_fpr()
-                accuracy = global_base_metrics.calculate_accuracy()
-                f1 = global_base_metrics.calculate_f1()
+                global_metrics = calculate_base_metrics(user_submission_file, truth)
+                global_metrics.calculate_precision()
+                global_metrics.calculate_recall()
+                global_metrics.calculate_fpr()
+                global_metrics.calculate_accuracy()
+                global_metrics.calculate_f1()
+                precision = global_metrics.precision
+                recall = global_metrics.recall
+                fpr = global_metrics.fpr
+                accuracy = global_metrics.accuracy
+                f1 = global_metrics.f1
                 (qa_precision, qa_recall, qa_fpr, qa_accuracy, qa_f1) = calculate_query_level_metrics()
  
         print("completed evaluation for " +phase_codename + " phase")
