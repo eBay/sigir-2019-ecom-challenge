@@ -2,18 +2,7 @@ from .utils import get_file_extension
 from .utils import open_file
 from .utils import Metrics
 
-query_level_metrics = {}
-"""This dictionary holds the scoring metrics for each query. Counts of true positives,
-false positives etc. The query id is the key, a Metrics object is 
-the value. Only queries having at least one judged document are included in the dictionary.
-"""
-
-documents_with_ground_truth = set()
-"""This set contains all the document ids that have one or more judgements. This is used
-to speed up scoring a prediction file.
-"""
-
-def calculate_query_level_metrics():
+def calculate_query_level_metrics(query_level_metrics):
     """Calculates query level metrics from query level base metrics.
 
     Query level metrics include recall, precision, and similar metrics. These are
@@ -71,7 +60,7 @@ def populate_index_map(infile):
             break
     return index_map
 
-def calculate_base_metrics(infile, truth):
+def calculate_base_metrics(infile, truth, documents_with_ground_truth, query_level_metrics):
     """Processes a prediction file and calculates base metrics.
 
     Each query-document pair in the prediction file is examined one-at-a-time. Each
@@ -136,7 +125,7 @@ def calculate_base_metrics(infile, truth):
                 global_metrics.add_fp(1)
                 query_level_metrics[query_id].add_fp(1)
 
-    return global_metrics
+    return (global_metrics, query_level_metrics)
 
 def populate_ground_truth(infile):
     """Processes the ground truth file.
@@ -153,7 +142,18 @@ def populate_ground_truth(infile):
     Note: This skips the first line of a ground truth file (header).
     """
     index = populate_index_map(infile)
-    results = {}
+    truth = {}
+
+    #This set contains all the document ids that have one or more judgements.
+    #This is used to speed up scoring a prediction file.
+    documents_with_ground_truth = set()
+
+    #This dictionary holds the scoring metrics for each query. 
+    #counts of true positives,false positives etc. The query id
+    #is the key, a Metrics object is the value. Only queries 
+    #having at least one judged document are included in the dictionary.
+
+    query_level_metrics = {}
     with open_file(infile) as f:
         next(f)
         for line in f:
@@ -165,13 +165,13 @@ def populate_ground_truth(infile):
                 if arr[i] != '0':
                     documents_with_ground_truth.add(doc_id)
                     query_id = index[i]
-                    results[(query_id, doc_id)] = arr[i]
+                    truth[(query_id, doc_id)] = arr[i]
 
                     # We should only include queries where there is any judgement for
                     # calculating (base) metrics. Exclude queries with no judgements.
                     if query_id not in query_level_metrics:
                         query_level_metrics[query_id] = Metrics()
-    return results
+    return (truth, documents_with_ground_truth, query_level_metrics)
 
 def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwargs):
     """
@@ -212,8 +212,6 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     """
     
     print("Starting Evaluation.....")
-    query_level_metrics.clear()
-    documents_with_ground_truth.clear()
     output = {}
     precision = 0
     recall = 0
@@ -226,7 +224,7 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
 
     if phase_codename == "unsupervised" or phase_codename == "supervised" or phase_codename == "final":
         print("evaluating for " +phase_codename+ " phase")
-        truth = populate_ground_truth(test_annotation_file)
+        (truth, documents_with_ground_truth, query_level_metrics) = populate_ground_truth(test_annotation_file)
 
         # We populate query_level_base_metrics with queries with any judgements as keys.
         # This will be zero if ground truth file is all empty or no queries are judged.
@@ -235,13 +233,13 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
         if len(query_level_metrics.keys()) > 0:
             extension = get_file_extension(user_submission_file)
             if extension == "tsv" or extension == "gz": 
-                global_metrics = calculate_base_metrics(user_submission_file, truth)
+                (global_metrics, query_level_metrics) = calculate_base_metrics(user_submission_file, truth, documents_with_ground_truth, query_level_metrics)
                 precision = global_metrics.precision()
                 recall = global_metrics.recall()
                 fpr = global_metrics.fpr()
                 accuracy = global_metrics.accuracy()
                 f1 = global_metrics.f1()
-                (qa_precision, qa_recall, qa_fpr, qa_accuracy, qa_f1) = calculate_query_level_metrics()
+                (qa_precision, qa_recall, qa_fpr, qa_accuracy, qa_f1) = calculate_query_level_metrics(query_level_metrics)
  
         print("completed evaluation for " +phase_codename + " phase")
     output["result"] = [
