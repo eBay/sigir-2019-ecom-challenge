@@ -128,14 +128,17 @@ def calculate_base_metrics(infile, truth, documents_with_ground_truth, query_lev
 def populate_ground_truth(infile):
     """Processes the ground truth file.
 
-    A dictionary of every query-document pair having a judgement is returned. A query-document
-    is considered to have a judgment if the entry in the ground truth file is non-zero.
-
-    The key for the map is (query_id,doc_id) and value is the prediction, typically 1 or -1,
+    A dictionary of every query-document pair having a judgement is created. A query-document
+    is considered to have a judgment if the entry in the ground truth file is non-zero.The key 
+    for the dictionary is (query_id,doc_id) and value is the prediction, typically 1 or -1, 
     though any non-zero value is retained.
 
-    This routine also initializes the query_level_base_metrics and query_level_metrics
-    dictionaries with an entry for each query having at least one judgement.
+    This routine also initializes the query_level_base_metrics dictionary with an entry for
+    each query having at least one judgement. Additionally, it also puts doc_id of all the
+    documents where (query_id,doc_id) pair has a human judgement in a set.
+
+    This routine returns the dictionary (query-documents with judgement), query_level_base_metrics
+    dictionary and the documents_with_ground_truth set.
 
     Note: This skips the first line of a ground truth file (header).
     """
