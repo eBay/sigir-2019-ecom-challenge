@@ -26,5 +26,5 @@ class ExpBins:
         assert (self.range_start <= value and value <= self.range_end)
 
         return math.floor(math.log(1 - (value - self.range_start) * (1-self.exp_base)/self.bin_size,
-                         self.exp_base))
+                                   self.exp_base))
 
