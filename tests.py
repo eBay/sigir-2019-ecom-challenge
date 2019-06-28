@@ -243,11 +243,25 @@ class TestPredictions(unittest.TestCase):
         rdata3 = evaluation_script.evaluate_submission("testfiles/ground_truth_set3.tsv",
                                                        "testfiles/predictions_set3a.tsv",
                                                        "testfiles/documents_set3.tsv")
+
+        # Data sets 4 and 5 test the evaluate function reading from the default document
+        # file in the same directory as the ground truth file.
+        r4 = evaluation_script.evaluate("testfiles2/ground_truth_set3.tsv",
+                                        "testfiles2/predictions_set3a.tsv", "supervised")
+        rdata4 = r4['result'][0]['data']
+
+        r5 = evaluation_script.evaluate("testfiles3/ground_truth_set3.tsv.gz",
+                                        "testfiles3/predictions_set3a.tsv.gz", "supervised")
+        rdata5 = r5['result'][0]['data']
+
+
         for k, v in expected.items():
             if k != 'l2h_ndcg10' and k != 'h2l_ndcg10':
                 self.assertAlmostEqual(v, rdata[k])
                 self.assertAlmostEqual(v, rdata2[k])
             self.assertAlmostEqual(v, rdata3[k])
+            self.assertAlmostEqual(v, rdata4[k])
+            self.assertAlmostEqual(v, rdata5[k])
 
     def test_g3_p3b(self):
         expected = {'precision': 0.5333333333333333,
