@@ -6,9 +6,9 @@ from .ground_truth import GroundTruth
 def calculate_query_level_metrics(query_level_metrics, ground_truth):
     """Calculates query level metrics from query level base metrics.
 
-    Query level metrics include recall, precision, and similar metrics. 
-    These are calculated on a per-query basis. A set of metrics 
-    averaged across all queries is calculated and returned in a tuple. 
+    Query level metrics include recall, precision, and similar metrics.
+    These are calculated on a per-query basis. A set of metrics
+    averaged across all queries is calculated and returned in a tuple.
 
     Base metrics includes counts like true positives, false positives, etc. These are
     calculated while walking the predictions.
@@ -49,19 +49,19 @@ def calculate_base_metrics(prediction_file, ground_truth):
     Each query-document pair in the prediction file is examined one-at-a-time. Each
     prediction is compared to the value in ground_truth object from the ground_truth file.
 
-    Base metrics are counts of true positives, false positives, etc. They are computed 
-    both globaly and per-query. Aggregate base metrics (stored in the Metrics class object) and 
+    Base metrics are counts of true positives, false positives, etc. They are computed
+    both globaly and per-query. Aggregate base metrics (stored in the Metrics class object) and
     per-query base metrics (stored in the query_level_metrics dictionary) are returned in a tuple.
     """
     global_metrics = Metrics(False)
     query_level_metrics = {}
     for query_id in ground_truth.queries_with_ground_truth:
         query_level_metrics[query_id] = Metrics(True)
-        
+
     # Predicted_keys serves dual purpose.
     # 1. Prevents the case where a (query_id, doc_id) pair is present multiple times.
     # 2. Helps us penalize those (query_id, doc_id) pairs that are present in ground truth
-    #    but are absent in the prediction file (unlikely though) 
+    #    but are absent in the prediction file (unlikely though)
     predicted_keys = set()
     with open_file(prediction_file) as f:
         header = f.readline().strip("\n").split("\t")
@@ -81,7 +81,7 @@ def calculate_base_metrics(prediction_file, ground_truth):
                             query_level_metrics[query_id].add_prediction(truth_label, prediction_label,
                                                                          doc_id, doc_price)
 
-    # An unlikely case where (query_id, doc_id) pairs are present in 
+    # An unlikely case where (query_id, doc_id) pairs are present in
     # the ground truth but are absent in the prediction file
     for (query_id, doc_id) in ground_truth.querydoc_labels.keys():
         if (query_id, doc_id) not in predicted_keys:
@@ -115,10 +115,10 @@ def evaluate_submission(ground_truth_file, prediction_file, doc_file=None):
     # We populate query_level_base_metrics with queries with any judgements as keys.
     # This will be zero if ground truth file is all empty or no queries are judged.
     # Note that this test prevents all base metrics to be zero after calculate_base_metrics().
-        
+
     if len(ground_truth.queries_with_ground_truth) > 0:
         extension = get_file_extension(prediction_file)
-        if extension == "tsv" or extension == "gz": 
+        if extension == "tsv" or extension == "gz":
             (global_metrics, query_level_metrics) = calculate_base_metrics(prediction_file, ground_truth)
             precision = global_metrics.precision()
             recall = global_metrics.recall()
@@ -129,20 +129,20 @@ def evaluate_submission(ground_truth_file, prediction_file, doc_file=None):
                 calculate_query_level_metrics(query_level_metrics, ground_truth)
 
     return {
-        "global_precision": precision,
-        "global_recall": recall,
-        "global_f1": f1,
-        "global_tpr": recall,
-        "global_fpr": fpr,
-        "global_accuracy": accuracy,
-        "average_precision": qa_precision,
-        "average_recall": qa_recall,
-        "average_f1": qa_f1,
-        "average_tpr": qa_recall,
-        "average_fpr": qa_fpr,
-        "average_accuracy": qa_accuracy,
-        "average_l2h_ndcg@10": qa_l2h_ndcg10,
-        "average_h2l_ndcg@10": qa_h2l_ndcg10
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "tpr": recall,
+        "fpr": fpr,
+        "accuracy": accuracy,
+        "ave_precision": qa_precision,
+        "ave_recall": qa_recall,
+        "ave_f1": qa_f1,
+        "ave_tpr": qa_recall,
+        "ave_fpr": qa_fpr,
+        "ave_accuracy": qa_accuracy,
+        "l2h_ndcg10": qa_l2h_ndcg10,
+        "h2l_ndcg10": qa_h2l_ndcg10
     }
 
 def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwargs):
