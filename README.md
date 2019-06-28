@@ -1,4 +1,4 @@
-# eBay SIGIR 2019 eCommerce Search Challenge
+# eBay SIGIR 2019 eCommerce Search Challenge &nbsp; [![Travis](https://img.shields.io/travis/eBay/sigir-2019-ecom-challenge.svg)](https://travis-ci.com/eBay/sigir-2019-ecom-challenge)
 
 This repository contains auxiliary tools used to support the [eBay SIGIR 2019 eCommerce Search Challenge: High Accuracy Recall Task](https://sigir-ecom.github.io/data-task.html). Currently this repository consists of one tool: An evaluation script challenge participants can use to score their predictions locally.
 
