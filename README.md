@@ -16,7 +16,7 @@ $ python3 eval_predictions.py --ground-truth-file ground_truth.tsv  --prediction
 {'precision': 0.7631944059048782, 'recall': 0.7421078193297718, 'f1': 0.7525034199726401, 'tpr': 0.7421078193297718, 'fpr': 0.16721529900462417, 'accuracy': 0.7946377897341597, 'ave_precision': 0.7682185259671204, 'ave_recall': 0.6742832851232685, 'ave_f1': 0.6500524267152122, 'ave_tpr': 0.6742832851232685, 'ave_fpr': 0.20725801902745247, 'ave_accuracy': 0.7948493212347685, 'l2h_ndcg10': 0.0, 'h2l_ndcg10': 0.0}
 ```
 
-The final output line has the same result values as used on the [challenge leaderboard](https://evalai.cloudcv.org/web/challenges/challenge-page/361/leaderboard). (The output references to the "supervised phase" can be ignored.)
+The final output line has the same result values as used on the [challenge leaderboard](https://evalai.cloudcv.org/web/challenges/challenge-page/361/leaderboard).
 
 The script has been tested with both python 2 and python 3. The short form options `-g` and `-p` can be used in place of the longer `--ground-truth-file` and `--prediction-file` form options. Both plain text and gzipped files are supported. (Please use `.tsv` or `.gz` file extensions.) An example call with short options and gzipped files:
 
@@ -33,7 +33,7 @@ An example showing the file format is given below. Challenge participants will f
 
 ### Evaluation script example
 
-The example uses the files in `samples/` directory show in the tables below.
+This example uses a couple of small files to show how the script works. The files are found in `samples/` directory. Data in the files is shown in the tables below:
 
 `ground_truth_set1.tsv`
 
@@ -53,7 +53,9 @@ The example uses the files in `samples/` directory show in the tables below.
 | 103       |  1 |  1 |  1 |
 | 104       |  1 | -1 |  1 |
 
-The `ground_truth.tsv` file has labels for seven of the twelve query-document pairs (those with `1` or `-1` entries). The `predictions.tsv` file has predictions for all twelve of the query-document pairs. The `eval_predictions.py` script will generate a score based on the seven query-document pairs having relevant-or-not labels. For this pair of files:
+The `ground_truth.tsv` file has labels for seven of the twelve query-document pairs (those with `1` or `-1` entries). The `predictions.tsv` file has predictions for all twelve of the query-document pairs. The `eval_predictions.py` script will generate a score based on the seven query-document pairs having relevant-or-not labels.
+
+The basic metrics calculations for these files:
 
 | Metric                    | Value | Calculation |
 | ------------------------- | ----- | ----------- |
@@ -65,9 +67,9 @@ The `ground_truth.tsv` file has labels for seven of the twelve query-document pa
 | Recall                    | 0.75  | tp/(tp+fn) = 3/(3+1) |
 | F1                        | 0.66  | (2 * precision * recall) / (precision + recall) |
 | False Positive Rate (fpr) | 0.66  | fp/(fp+tn) = 2/(2+1) |
-| Accuracy                  |       | (tp + tn) / (tp + tn + fp+ fn) = (3+1)/(3+1+2+1) |
+| Accuracy                  | 0.57  | (tp + tn) / (tp + tn + fp+ fn) = (3+1)/(3+1+2+1) |
 
-The metrics shown above have been calculated globally, across all queries. Separate versions of the metrics are calculated per query and averaged across all queries. These metrics have names prefixed with `ave_` in the output. See the example below.
+The metrics shown above have been calculated globally, across all queries. Separate versions of the metrics are calculated per query and averaged across all queries. See [metrics calculated](#metrics-calculated) below for the full list of metrics and the names used in the output.
 
 Running the script:
 
@@ -92,7 +94,7 @@ $ python3 tests.py
 
 ## Metrics calculated
 
-The list of calculated metrics is given below. A subset of these metrics are included on the evalAI leaderboard, but all are available in the result file available on the My Submissions page. A sample of the calculations is shown for a number of the metrics in the table above.
+The list of calculated metrics is given below. A subset of these metrics are included on the evalAI leaderboard, but all are available in the result file available on the My Submissions page. Calculations for several of the metrics is shown earlier in this document.
 
 * `precision` - Global precision. (Global in that individual queries are not considered.)
 * `recall` - Global recall.
@@ -109,6 +111,6 @@ The list of calculated metrics is given below. A subset of these metrics are inc
 * `l2h_ndcg10` - Price low-to-high NDCG at rank 10.
 * `h2l_ndcg10` - Price high-to-low NDCG at rank 10.
 
-Note that "average precision" metric calculated here differs from the version often used in ranked retrieval (see [average precision](https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Average_precision)). There is no sorting involved here, so average precision, average recall, average F1, etc., are calculated by computing the aggregate metric for each query and taking the average of all the queries.
+Note that "average precision" metric calculated here differs from the version often used in ranked retrieval (see [average precision](https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Average_precision)). There is no sorting used in these scenarios, so average precision, average recall, average F1, etc., are calculated by computing the aggregate metric for each query and taking the average of all the queries.
 
 The price-based NDCG metrics are an early stage idea. They are calculated by grouping documents by price bucket and using the price buckets as a proxy for a relevance score.
