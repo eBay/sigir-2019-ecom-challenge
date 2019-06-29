@@ -1,3 +1,4 @@
+import os.path
 from .utils import get_file_extension
 from .utils import open_file
 from .metrics import Metrics
@@ -186,7 +187,21 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     if phase_codename == "unsupervised" or phase_codename == "supervised" or phase_codename == "final":
         print("evaluating for " +phase_codename+ " phase")
 
-    result_values = evaluate_submission(test_annotation_file, user_submission_file)
+    # See if there is a documents file in the same directory as the ground truth file
+    doc_file = None
+    test_annotation_dir = os.path.dirname(test_annotation_file)
+    doc_file_tsv_path = os.path.join(test_annotation_dir, "documents.tsv")
+    doc_file_tsv_gz_path = os.path.join(test_annotation_dir, "documents.tsv.gz")
+
+    if os.path.exists(doc_file_tsv_path):
+        doc_file = doc_file_tsv_path
+    elif os.path.exists(doc_file_tsv_gz_path):
+        doc_file = doc_file_tsv_gz_path
+
+    if doc_file is not None:
+        print("Document metadata found.")
+
+    result_values = evaluate_submission(test_annotation_file, user_submission_file, doc_file)
 
     if phase_codename == "unsupervised" or phase_codename == "supervised" or phase_codename == "final":
         print("completed evaluation for " +phase_codename + " phase")
