@@ -75,9 +75,6 @@ Running the script:
 
 ```
 $ python3 eval_predictions.py -g samples/ground_truth_set1.tsv -p samples/predictions_set1.tsv
-Starting Evaluation.....
-evaluating for supervised phase
-completed evaluation for supervised phase
 
 {'precision': 0.6, 'recall': 0.75, 'f1': 0.6666666666666665, 'tpr': 0.75, 'fpr': 0.6666666666666666, 'accuracy': 0.5714285714285714, 'ave_precision': 0.7777777777777778, 'ave_recall': 0.8333333333333334, 'ave_f1': 0.7222222222222222, 'ave_tpr': 0.8333333333333334, 'ave_fpr': 0.6666666666666666, 'ave_accuracy': 0.611111111111111, 'l2h_ndcg10': 0.0, 'h2l_ndcg10': 0.0}
 ```
