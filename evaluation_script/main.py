@@ -1,4 +1,5 @@
 import os.path
+from . import __path__ as ROOT_PATH
 from .utils import get_file_extension
 from .utils import open_file
 from .metrics import Metrics
@@ -189,7 +190,8 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
 
     # See if there is a documents file in the package directory
     doc_file = None
-    package_dir = os.path.dirname(globals()['__file__'])
+    # package_dir = os.path.dirname(globals()['__file__'])
+    package_dir = ROOT_PATH[0]
     doc_file_tsv_path = os.path.join(package_dir, "documents.tsv")
     doc_file_tsv_gz_path = os.path.join(package_dir, "documents.tsv.gz")
     
