@@ -1,5 +1,7 @@
 import evaluation_script
 import unittest
+import shutil
+import os
 
 class TestPredictions(unittest.TestCase):
 
@@ -245,14 +247,19 @@ class TestPredictions(unittest.TestCase):
                                                        "testfiles/documents_set3.tsv")
 
         # Data sets 4 and 5 test the evaluate function reading from the default document
-        # file in the same directory as the ground truth file.
+        # file when present in the directory of the evaluation_script package.
+        shutil.copy2('testfiles2/documents.tsv', 'evaluation_script')
         r4 = evaluation_script.evaluate("testfiles2/ground_truth_set3.tsv",
                                         "testfiles2/predictions_set3a.tsv", "supervised")
         rdata4 = r4['result'][0]['data']
+        os.remove('evaluation_script/documents.tsv')
+        
 
+        shutil.copy2('testfiles3/documents.tsv.gz', 'evaluation_script')
         r5 = evaluation_script.evaluate("testfiles3/ground_truth_set3.tsv.gz",
                                         "testfiles3/predictions_set3a.tsv.gz", "supervised")
         rdata5 = r5['result'][0]['data']
+        os.remove('evaluation_script/documents.tsv.gz')
 
 
         for k, v in expected.items():
