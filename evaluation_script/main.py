@@ -1,4 +1,5 @@
 import os.path
+from . import __path__ as ROOT_PATH
 from .utils import get_file_extension
 from .utils import open_file
 from .metrics import Metrics
@@ -19,8 +20,8 @@ def calculate_query_level_metrics(query_level_metrics, ground_truth):
     qa_fpr = 0
     qa_accuracy = 0
     qa_f1 = 0
-    qa_l2h_ndcg10 = 0;
-    qa_h2l_ndcg10 = 0;
+    qa_l2h_ndcg10 = 0
+    qa_h2l_ndcg10 = 0
     total_queries = len(query_level_metrics.keys())
 
     for query_id in query_level_metrics:
@@ -187,12 +188,12 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     if phase_codename == "unsupervised" or phase_codename == "supervised" or phase_codename == "final":
         print("evaluating for " +phase_codename+ " phase")
 
-    # See if there is a documents file in the same directory as the ground truth file
+    # See if there is a documents file in the package directory
     doc_file = None
-    test_annotation_dir = os.path.dirname(test_annotation_file)
-    doc_file_tsv_path = os.path.join(test_annotation_dir, "documents.tsv")
-    doc_file_tsv_gz_path = os.path.join(test_annotation_dir, "documents.tsv.gz")
-
+    package_dir = ROOT_PATH[0]
+    doc_file_tsv_path = os.path.join(package_dir, "documents.tsv")
+    doc_file_tsv_gz_path = os.path.join(package_dir, "documents.tsv.gz")
+    
     if os.path.exists(doc_file_tsv_path):
         doc_file = doc_file_tsv_path
     elif os.path.exists(doc_file_tsv_gz_path):
